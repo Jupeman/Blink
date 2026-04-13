@@ -45,10 +45,16 @@ private struct DestinationsTab: View {
 
                 Divider()
 
-                HStack {
-                    Button(action: addPreset) { Image(systemName: "plus") }
-                    Button(action: removeSelected) { Image(systemName: "minus") }
-                        .disabled(selectedID == nil || store.destinations.count <= 1)
+                HStack(spacing: 4) {
+                    Button(action: addPreset) {
+                        Image(systemName: "plus")
+                            .frame(width: 16, height: 16)
+                    }
+                    Button(action: removeSelected) {
+                        Image(systemName: "minus")
+                            .frame(width: 16, height: 16)
+                    }
+                    .disabled(selectedID == nil || store.destinations.count <= 1)
                     Spacer()
                 }
                 .padding(8)

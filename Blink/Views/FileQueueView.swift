@@ -37,16 +37,6 @@ struct FileQueueView: View {
                     if manager.items.isEmpty { manager.clearQueue() }
                 }
             }
-            .onDrop(of: [.fileURL], isTargeted: nil) { providers in
-                for provider in providers {
-                    provider.loadItem(forTypeIdentifier: UTType.fileURL.identifier) { data, _ in
-                        guard let data = data as? Data,
-                              let url = URL(dataRepresentation: data, relativeTo: nil) else { return }
-                        Task { @MainActor in manager.addFiles([url]) }
-                    }
-                }
-                return true
-            }
 
             Divider()
 
@@ -65,6 +55,21 @@ struct FileQueueView: View {
                 .disabled(settings.activeDestination == nil)
             }
             .padding()
+        }
+        .toolbar {
+            ToolbarItem(placement: .automatic) {
+                Button {
+                    let panel = NSOpenPanel()
+                    panel.allowsMultipleSelection = true
+                    panel.canChooseFiles = true
+                    panel.canChooseDirectories = true
+                    panel.allowedContentTypes = [.item]
+                    if panel.runModal() == .OK { manager.addFiles(panel.urls) }
+                } label: {
+                    Image(systemName: "plus")
+                }
+                .help("Add more files")
+            }
         }
     }
 }

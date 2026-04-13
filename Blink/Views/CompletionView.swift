@@ -22,6 +22,18 @@ struct CompletionView: View {
                 if summary.filesFailed > 0 {
                     Text("\(summary.filesFailed) file\(summary.filesFailed == 1 ? "" : "s") failed")
                         .foregroundStyle(.red)
+
+                    ForEach(manager.items.filter {
+                        if case .failed = $0.status { return true }
+                        return false
+                    }) { item in
+                        if case .failed(let msg) = item.status {
+                            Text(msg)
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                                .textSelection(.enabled)
+                        }
+                    }
                 }
             }
 
