@@ -1,0 +1,24 @@
+# Xcode
+*.xcodeproj/
+!*.xcodeproj/project.pbxproj
+!*.xcodeproj/xcshareddata/
+xcuserdata/
+build/
+DerivedData/
+*.xcworkspace/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Swift Package Manager
+.build/
+.swiftpm/
+
+# Claude Code
+.claude/sessions/
+
+# Icon build intermediates
+icons/*.iconset/
+icons/*.icns

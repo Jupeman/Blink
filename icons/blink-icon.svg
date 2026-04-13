@@ -1,0 +1,118 @@
+<svg width="1024" height="1024" viewBox="0 0 680 680" xmlns="http://www.w3.org/2000/svg">
+
+<style>
+  .bg-card { fill: #1a1a2e; }
+  .robe-left { fill: #4a3f8a; opacity: 0.6; }
+  .robe-right { fill: #6c5ce7; }
+  .robe-accent { fill: #a29bfe; }
+  .skin { fill: #f0d9b5; }
+  .hat { fill: #4a3f8a; }
+  .hat-right { fill: #6c5ce7; }
+  .hat-band { fill: #ffd32a; }
+  .star { fill: #ffd32a; }
+  .star-dim { fill: #ffd32a; opacity: 0.4; }
+  .particle { fill: #a29bfe; }
+  .particle-gold { fill: #ffd32a; }
+  .trail { fill: none; stroke: #a29bfe; stroke-width: 2; stroke-dasharray: 6 4; opacity: 0.5; }
+  .spark { fill: #fff; opacity: 0.8; }
+  .floor-line { stroke: #2d3561; stroke-width: 1.5; }
+  .staff { stroke: #c8a97e; stroke-width: 4; stroke-linecap: round; fill: none; }
+  .staff-left { stroke: #c8a97e; stroke-width: 4; stroke-linecap: round; fill: none; opacity: 0.5; }
+  .orb { fill: #00d2d3; }
+  .orb-glow { fill: #00d2d3; opacity: 0.3; }
+  .orb-left { fill: #00d2d3; opacity: 0.4; }
+  .beard { fill: #e0e0e0; }
+  .beard-left { fill: #e0e0e0; opacity: 0.5; }
+  .eye { fill: #fff; }
+</style>
+
+<defs>
+  <clipPath id="icon-clip">
+    <rect x="40" y="40" width="600" height="600" rx="120"/>
+  </clipPath>
+</defs>
+
+<rect x="40" y="40" width="600" height="600" rx="120" class="bg-card"/>
+
+<g clip-path="url(#icon-clip)">
+
+  <rect x="40" y="480" width="600" height="160" fill="#0f0f23"/>
+  <line x1="40" y1="520" x2="640" y2="520" class="floor-line"/>
+  <line x1="40" y1="525" x2="640" y2="525" stroke="#1a1a3e" stroke-width="0.5"/>
+
+  <!-- Dissolving wizard (left side) -->
+  <g opacity="0.55">
+    <line x1="175" y1="200" x2="195" y2="510" class="staff-left"/>
+    <circle cx="175" cy="195" r="10" class="orb-left"/>
+    <polygon points="215,175 245,245 185,245" class="hat" opacity="0.5"/>
+    <polygon points="210,180 250,248 170,248" class="hat" opacity="0.3"/>
+    <line x1="170" y1="245" x2="255" y2="245" stroke="#ffd32a" stroke-width="3" opacity="0.4"/>
+    <circle cx="215" cy="275" r="28" class="skin" opacity="0.5"/>
+    <path d="M195,290 Q215,340 235,290" class="beard-left"/>
+    <path d="M185,300 L170,510 L260,510 L245,300 Z" class="robe-left"/>
+  </g>
+
+  <!-- Dissolving particles from left wizard -->
+  <circle cx="260" cy="220" r="5" class="particle" opacity="0.7"/>
+  <circle cx="275" cy="260" r="4" class="particle" opacity="0.6"/>
+  <circle cx="270" cy="310" r="6" class="particle" opacity="0.5"/>
+  <circle cx="280" cy="350" r="3" class="particle" opacity="0.8"/>
+  <circle cx="265" cy="400" r="5" class="particle" opacity="0.4"/>
+  <circle cx="255" cy="190" r="3" class="particle-gold" opacity="0.6"/>
+  <circle cx="285" cy="280" r="3" class="particle-gold" opacity="0.5"/>
+  <circle cx="275" cy="440" r="4" class="particle-gold" opacity="0.4"/>
+  <rect x="268" y="240" width="4" height="4" rx="1" class="spark" opacity="0.6" transform="rotate(30 270 242)"/>
+  <rect x="258" y="340" width="3" height="3" rx="1" class="spark" opacity="0.5" transform="rotate(45 260 342)"/>
+  <rect x="278" y="380" width="4" height="4" rx="1" class="spark" opacity="0.4" transform="rotate(15 280 382)"/>
+
+  <!-- Trail particles (middle arc) -->
+  <path d="M280,340 Q340,200 420,340" class="trail"/>
+  <circle cx="310" cy="270" r="3" class="particle" opacity="0.7"/>
+  <circle cx="330" cy="240" r="2.5" class="particle-gold" opacity="0.6"/>
+  <circle cx="350" cy="230" r="3" class="particle" opacity="0.8"/>
+  <circle cx="370" cy="240" r="2" class="particle-gold" opacity="0.7"/>
+  <circle cx="390" cy="260" r="3.5" class="particle" opacity="0.6"/>
+  <rect x="320" y="252" width="3" height="3" rx="1" class="spark" transform="rotate(20 322 254)"/>
+  <rect x="360" y="232" width="3" height="3" rx="1" class="spark" opacity="0.7" transform="rotate(50 362 234)"/>
+  <rect x="380" y="248" width="2.5" height="2.5" rx="1" class="spark" opacity="0.6" transform="rotate(35 382 250)"/>
+
+  <!-- Materializing particles approaching right wizard -->
+  <circle cx="420" cy="220" r="4" class="particle" opacity="0.8"/>
+  <circle cx="415" cy="310" r="5" class="particle" opacity="0.7"/>
+  <circle cx="425" cy="360" r="3" class="particle-gold" opacity="0.8"/>
+  <circle cx="410" cy="440" r="4" class="particle" opacity="0.6"/>
+  <rect x="418" y="270" width="4" height="4" rx="1" class="spark" opacity="0.7" transform="rotate(40 420 272)"/>
+
+  <!-- Solid wizard (right side, arriving) -->
+  <g>
+    <line x1="500" y1="200" x2="520" y2="510" class="staff"/>
+    <circle cx="500" cy="195" r="12" class="orb-glow"/>
+    <circle cx="500" cy="195" r="8" class="orb"/>
+    <circle cx="498" cy="192" r="2.5" class="spark"/>
+
+    <path d="M420,300 L400,510 L530,510 L510,300 Z" class="robe-right"/>
+    <path d="M440,350 L420,510 L460,510 Z" class="robe-accent" opacity="0.3"/>
+    <rect x="418" y="355" width="95" height="8" rx="3" fill="#ffd32a" opacity="0.8"/>
+
+    <circle cx="465" cy="275" r="30" class="skin"/>
+    <circle cx="455" cy="270" r="3" fill="#1a1a2e"/>
+    <circle cx="475" cy="270" r="3" fill="#1a1a2e"/>
+    <circle cx="454" cy="269" r="1" class="eye"/>
+    <circle cx="474" cy="269" r="1" class="eye"/>
+    <path d="M440,290 Q455,360 465,345 Q475,360 490,290" class="beard"/>
+    <path d="M463,275 L460,285 L468,285" fill="none" stroke="#c4a882" stroke-width="1.5"/>
+
+    <polygon points="465,165 505,245 425,245" class="hat-right"/>
+    <ellipse cx="465" cy="248" rx="48" ry="8" fill="#4a3f8a"/>
+    <line x1="425" y1="245" x2="505" y2="245" class="hat-band" stroke-width="4"/>
+    <polygon points="475,200 478,210 488,210 480,216 483,226 475,220 467,226 470,216 462,210 472,210" class="star"/>
+  </g>
+
+  <!-- Ambient stars -->
+  <polygon points="150,140 152,146 158,146 153,150 155,156 150,152 145,156 147,150 142,146 148,146" class="star-dim"/>
+  <polygon points="560,150 562,155 567,155 563,158 565,163 560,160 555,163 557,158 553,155 558,155" class="star-dim"/>
+  <polygon points="340,130 341,134 345,134 342,136 343,140 340,138 337,140 338,136 335,134 339,134" class="star-dim"/>
+  <polygon points="590,300 591,303 594,303 592,305 593,308 590,306 587,308 588,305 586,303 589,303" class="star" opacity="0.3"/>
+
+</g>
+</svg>
