@@ -142,12 +142,22 @@ private struct AboutTab: View {
         VStack(spacing: 12) {
             Image(nsImage: NSApp.applicationIconImage)
                 .resizable()
-                .frame(width: 64, height: 64)
+                .frame(width: 128, height: 128)
+
             Text("Blink").font(.title).fontWeight(.bold)
             Text("Version 1.0.0").foregroundStyle(.secondary)
             Text("A native macOS app for SCP file transfers.")
             Text("Cast Blink. File appears.")
                 .italic().foregroundStyle(.secondary)
+
+            Spacer().frame(height: 4)
+
+            HStack(spacing: 4) {
+                Text("\u{00A9} 2026")
+                    .foregroundStyle(.secondary)
+                Link("Improbability Works", destination: URL(string: "https://improbability.works")!)
+            }
+            .font(.caption)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }

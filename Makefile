@@ -1,4 +1,4 @@
-.PHONY: generate build run test clean
+.PHONY: generate build run test clean install
 
 PROJECT = Blink.xcodeproj
 SCHEME = Blink
@@ -28,6 +28,12 @@ test: generate
 		-configuration Debug \
 		-derivedDataPath $(BUILD_DIR) \
 		test
+
+install: build
+	@pkill Blink 2>/dev/null || true
+	rm -rf /Applications/Blink.app
+	cp -R $(APP_PATH) /Applications/Blink.app
+	@echo "Installed to /Applications/Blink.app"
 
 clean:
 	rm -rf $(BUILD_DIR)
