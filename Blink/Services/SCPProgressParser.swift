@@ -1,8 +1,9 @@
 import Foundation
 
 enum SCPProgressParser {
+    // (.+?) lazily matches filenames (including spaces), then anchors on the percentage
     private static let progressPattern = try! NSRegularExpression(
-        pattern: #"^\s*(\S+)\s+(\d{1,3})%\s+(\S+)\s+(\S+/s)\s+(\S+)"#
+        pattern: #"^\s*(.+?)\s+(\d{1,3})%\s+(\S+)\s+(\S+/s)\s+(\S+)"#
     )
 
     static func parse(line: String) -> TransferProgress? {

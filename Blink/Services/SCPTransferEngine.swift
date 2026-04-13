@@ -1,29 +1,12 @@
 import Foundation
 
-// POSIX wait-status macros are C macros not available in Swift.
-// These replicate the Darwin definitions.
-private func posixWIFEXITED(_ status: Int32) -> Bool {
-    (status & 0x7F) == 0
-}
-
-private func posixWEXITSTATUS(_ status: Int32) -> Int32 {
-    (status >> 8) & 0xFF
-}
-
-private func posixWIFSIGNALED(_ status: Int32) -> Bool {
-    (status & 0x7F) != 0 && (status & 0x7F) != 0x7F
-}
-
 enum SCPError: LocalizedError {
-    case forkFailed
     case transferFailed(String)
     case cancelled
     case scpNotFound
 
     var errorDescription: String? {
         switch self {
-        case .forkFailed:
-            return "Failed to start the SCP process."
         case .transferFailed(let msg):
             return msg
         case .cancelled:
@@ -36,12 +19,12 @@ enum SCPError: LocalizedError {
 
 final class SCPTransferEngine: @unchecked Sendable {
     private let scpPath: String
-    private let pidLock = NSLock()
-    private var _currentPID: pid_t = 0
+    private let processLock = NSLock()
+    private var _currentProcess: Process?
 
-    private var currentPID: pid_t {
-        get { pidLock.withLock { _currentPID } }
-        set { pidLock.withLock { _currentPID = newValue } }
+    private var currentProcess: Process? {
+        get { processLock.withLock { _currentProcess } }
+        set { processLock.withLock { _currentProcess = newValue } }
     }
 
     init(scpPath: String = "/usr/bin/scp") {
@@ -63,87 +46,121 @@ final class SCPTransferEngine: @unchecked Sendable {
             let filePath = file.path
             let scpTarget = destination.scpTarget
 
+            // Use `script` to wrap SCP in a PTY. script allocates its own
+            // PTY for the child command and copies output to its stdout.
+            // This avoids forkpty issues inside the app process.
             DispatchQueue.global(qos: .userInitiated).async { [weak self] in
-                var masterFD: Int32 = 0
-                let pid = forkpty(&masterFD, nil, nil, nil)
+                let process = Process()
+                process.executableURL = URL(fileURLWithPath: "/usr/bin/script")
 
-                if pid == 0 {
-                    // Child process: exec scp
-                    var args = [scpPath]
-                    if isDirectory { args.append("-r") }
-                    args.append(filePath)
-                    args.append(scpTarget)
-                    let cArgs = args.map { strdup($0) } + [nil]
-                    execvp(scpPath, cArgs)
-                    _exit(1)
-                } else if pid > 0 {
-                    self?.currentPID = pid
+                // script -q /dev/null <command> runs command in a PTY,
+                // writes PTY output to stdout, discards the script file
+                var scpArgs: [String] = [scpPath]
+                scpArgs.append("-o")
+                scpArgs.append("BatchMode=yes")
+                scpArgs.append("-o")
+                scpArgs.append("ConnectTimeout=10")
+                if isDirectory { scpArgs.append("-r") }
+                scpArgs.append(filePath)
+                scpArgs.append(scpTarget)
 
-                    continuation.onTermination = { @Sendable _ in
-                        kill(pid, SIGTERM)
-                    }
+                // script args: -q (quiet) -F (flush) /dev/null scp-command...
+                process.arguments = ["-q", "-F", "/dev/null"] + scpArgs
 
-                    let bufferSize = 4096
-                    let buffer = UnsafeMutablePointer<UInt8>.allocate(capacity: bufferSize)
-                    defer { buffer.deallocate() }
-                    var accumulated = ""
+                // Set COLUMNS so scp formats progress to a known width
+                var env = ProcessInfo.processInfo.environment
+                env["COLUMNS"] = "120"
+                env["TERM"] = "xterm-256color"
+                process.environment = env
 
-                    while true {
-                        let bytesRead = read(masterFD, buffer, bufferSize)
-                        if bytesRead <= 0 { break }
-                        let chunk = String(
-                            bytes: UnsafeBufferPointer(start: buffer, count: bytesRead),
-                            encoding: .utf8
-                        ) ?? ""
-                        accumulated += chunk
+                let pipe = Pipe()
+                process.standardOutput = pipe
+                process.standardError = pipe
 
-                        let lines = accumulated.components(
-                            separatedBy: CharacterSet(charactersIn: "\r\n")
-                        )
-                        accumulated = lines.last ?? ""
+                do {
+                    try process.run()
+                } catch {
+                    continuation.finish(throwing: SCPError.transferFailed(
+                        "Failed to launch: \(error.localizedDescription)"))
+                    return
+                }
 
-                        for line in lines.dropLast() {
-                            if let progress = SCPProgressParser.parse(line: line) {
-                                continuation.yield(progress)
-                            }
+                self?.currentProcess = process
+
+                continuation.onTermination = { @Sendable _ in
+                    process.terminate()
+                }
+
+                // Read from pipe on this thread
+                let fh = pipe.fileHandleForReading
+                let fd = fh.fileDescriptor
+                let bufferSize = 4096
+                let buffer = UnsafeMutablePointer<UInt8>.allocate(capacity: bufferSize)
+                defer { buffer.deallocate() }
+                var accumulated = ""
+                var errorOutput = ""
+
+                while true {
+                    let bytesRead = read(fd, buffer, bufferSize)
+                    if bytesRead <= 0 { break }
+
+                    let chunk = String(
+                        bytes: UnsafeBufferPointer(start: buffer, count: bytesRead),
+                        encoding: .utf8
+                    ) ?? ""
+                    accumulated += chunk
+
+                    // Split on \r or \n
+                    let lines = accumulated.components(
+                        separatedBy: CharacterSet(charactersIn: "\r\n")
+                    )
+                    accumulated = lines.last ?? ""
+
+                    for line in lines.dropLast() {
+                        let trimmed = line.trimmingCharacters(in: .whitespacesAndNewlines)
+                        if trimmed.isEmpty { continue }
+                        if let progress = SCPProgressParser.parse(line: line) {
+                            continuation.yield(progress)
+                        } else {
+                            errorOutput += trimmed + "\n"
                         }
                     }
 
-                    close(masterFD)
-
-                    var status: Int32 = 0
-                    waitpid(pid, &status, 0)
-                    self?.currentPID = 0
-
-                    if posixWIFEXITED(status) && posixWEXITSTATUS(status) == 0 {
-                        continuation.finish()
-                    } else if posixWIFSIGNALED(status) {
-                        continuation.finish(throwing: SCPError.cancelled)
-                    } else {
-                        let msg = Self.describeError(
-                            exitCode: posixWEXITSTATUS(status),
-                            lastOutput: accumulated
-                        )
-                        continuation.finish(throwing: SCPError.transferFailed(msg))
+                    // Also try parsing accumulated (handles \r-only updates)
+                    if !accumulated.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                        if let progress = SCPProgressParser.parse(line: accumulated) {
+                            continuation.yield(progress)
+                            accumulated = ""
+                        }
                     }
+                }
+
+                process.waitUntilExit()
+                self?.currentProcess = nil
+
+                let exitCode = process.terminationStatus
+                let allOutput = (errorOutput + accumulated)
+                    .trimmingCharacters(in: .whitespacesAndNewlines)
+
+                if exitCode == 0 {
+                    continuation.finish()
+                } else if process.terminationReason == .uncaughtSignal {
+                    continuation.finish(throwing: SCPError.cancelled)
                 } else {
-                    continuation.finish(throwing: SCPError.forkFailed)
+                    let msg = Self.describeError(exitCode: exitCode, lastOutput: allOutput)
+                    continuation.finish(throwing: SCPError.transferFailed(msg))
                 }
             }
         }
     }
 
     func cancel() {
-        let pid = currentPID
-        if pid > 0 {
-            kill(pid, SIGTERM)
-        }
+        currentProcess?.terminate()
     }
 
     private static func describeError(exitCode: Int32, lastOutput: String) -> String {
         let trimmed = lastOutput.trimmingCharacters(in: .whitespacesAndNewlines)
         let lowered = trimmed.lowercased()
-
         if lowered.contains("permission denied") {
             return "Permission denied on remote path. Check destination directory permissions."
         }
@@ -153,9 +170,7 @@ final class SCPTransferEngine: @unchecked Sendable {
         if lowered.contains("connection refused") || lowered.contains("could not resolve") {
             return "Could not connect to the server. Verify your SSH config and that the server is reachable."
         }
-        if !trimmed.isEmpty {
-            return trimmed
-        }
+        if !trimmed.isEmpty { return trimmed }
         return "SCP exited with code \(exitCode)."
     }
 }

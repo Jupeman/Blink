@@ -38,4 +38,21 @@ final class SCPProgressParserTests: XCTestCase {
         let line = "\rmovie.mkv                                    42%  1.8GB  98.2MB/s   00:28 ETA\r"
         XCTAssertEqual(SCPProgressParser.parse(line: line)?.percentage, 42)
     }
+
+    func testFilenameWithSpaces() {
+        let line = "The Martian 4k.mkv                           42%   18GB  98.2MB/s   04:28 ETA"
+        let r = SCPProgressParser.parse(line: line)
+        XCTAssertNotNil(r)
+        XCTAssertEqual(r?.filename, "The Martian 4k.mkv")
+        XCTAssertEqual(r?.percentage, 42)
+        XCTAssertEqual(r?.speed, "98.2MB/s")
+    }
+
+    func testFilenameWithMultipleSpaces() {
+        let line = "My Movie File (2024).mkv                     67% 2048MB  55.3MB/s   00:15 ETA"
+        let r = SCPProgressParser.parse(line: line)
+        XCTAssertNotNil(r)
+        XCTAssertEqual(r?.filename, "My Movie File (2024).mkv")
+        XCTAssertEqual(r?.percentage, 67)
+    }
 }
