@@ -101,6 +101,14 @@ final class TransferManager {
                 elapsed: elapsed
             )
             phase = .completed
+
+            if let summary = self.summary, summary.filesTransferred > 0 {
+                NotificationService.sendTransferComplete(
+                    fileCount: summary.filesTransferred,
+                    totalSize: summary.totalBytes,
+                    destinationHost: destination.host
+                )
+            }
         }
     }
 
