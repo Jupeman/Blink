@@ -22,3 +22,4 @@ DerivedData/
 # Icon build intermediates
 icons/*.iconset/
 icons/*.icns
+icons/*.png
