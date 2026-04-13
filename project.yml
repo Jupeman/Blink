@@ -1,0 +1,64 @@
+name: Blink
+options:
+  bundleIdPrefix: com.charlie
+  deploymentTarget:
+    macOS: "14.0"
+  xcodeVersion: "16.0"
+  generateEmptyDirectories: true
+
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    MACOSX_DEPLOYMENT_TARGET: "14.0"
+    SWIFT_STRICT_CONCURRENCY: complete
+
+targets:
+  Blink:
+    type: application
+    platform: macOS
+    sources:
+      - path: Blink
+        excludes:
+          - "**/*.entitlements"
+    resources:
+      - path: Blink/Resources/Assets.xcassets
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.charlie.blink
+        INFOPLIST_FILE: Blink/Info.plist
+        CODE_SIGN_ENTITLEMENTS: Blink/Resources/Blink.entitlements
+        CODE_SIGN_IDENTITY: "-"
+        PRODUCT_NAME: Blink
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ENABLE_HARDENED_RUNTIME: false
+
+  BlinkTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - path: BlinkTests
+    dependencies:
+      - target: Blink
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.charlie.blink.tests
+        GENERATE_INFOPLIST_FILE: YES
+        TEST_HOST: "$(BUILT_PRODUCTS_DIR)/Blink.app/Contents/MacOS/Blink"
+        BUNDLE_LOADER: "$(TEST_HOST)"
+
+schemes:
+  Blink:
+    build:
+      targets:
+        Blink: all
+        BlinkTests: [test]
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets:
+        - BlinkTests
+    profile:
+      config: Release
+    archive:
+      config: Release
